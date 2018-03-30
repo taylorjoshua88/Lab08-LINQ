@@ -1,70 +1,110 @@
-D![cf](http://i.imgur.com/7v5ASc8.png) Lab 8 : LINQ in Manhatten
-=====================================
+# LinqInManhattan
 
-## To Submit this Assignment
-- fork this repository
-- write all of your code in a directory named `lab-#`; + `<your name>` **e.g.** `lab08-amanda`
-- push to your repository
-- submit a pull request to this repository
-- submit a link to your PR in canvas
+**Author**: Joshua Taylor
+**Version**: 1.0.0
 
+## Overview
 
-## Directions
-Provided is a JSON file that contains a data set of location information for properties in Manhatten.
-- Read in the file and answer the questions below
-- Use LINQ queries and Lambda statements (when appropriate) to find the answers. 
-- You must have a mix of LINQ queries and Lambda expressions when answering the questions
+LinqInManhattan demonstrates using Language Integrated Querying (LINQ) in C#
+in addition to JSON deserialization with the Newtonsoft.Json NuGet package.
+Source data has been provided in the form of a minified JSON file called
+data.json representing geolocational data across various boroughs and
+neighborhoods in New York City. LINQ is used to select the neighborhood
+data specifically and to filter out any blank or duplicate results. These
+neighborhoods are then printed to the console.
 
-## Setup
-- Add the data.json file to your solution root folder
-- Explore the NuGet packages and install NewtonSoftJson
-- Do some self research and find out how to read in JSON file (hint: JsonConvert.DeserializedOject is *part* of it)
-- You will need to break up each section of the JSON file up into different classes, use your resources - ask the TA's if your stuck. (Maybe find a converter of some sort??)
+## Getting Started
 
-## Questions
-Each query builds off of the next. ..
-1. Output all of the neighborhoods in this data list
-2. Filter out all the neighborhoods that do not have any names
-3. Remove the Duplicates
-4. Rewrite the queries from above, and consolidate all into one single query.
+GenericCollections targets the .NET Core 2.0 platform. The .NET Core 2.0 SDK can
+be downloaded from the following URL for Windows, Linux, and macOS:
 
-## ReadMe
-A README is a module consumer's first -- and maybe only -- look into your creation. The consumer wants a module to fulfill their need, so you must explain exactly what need your module fills, and how effectively it does so.
-<br />
-Your job is to
+https://www.microsoft.com/net/download/
 
-1. tell them what it is (with context)
-2. show them what it looks like in action
-3. show them how they use it
-4. tell them any other relevant details
-<br />
+The dotnet CLI utility would then be used to build and run the application:
 
-This is ***your*** job. It's up to the module creator to prove that their work is a shining gem in the sea of slipshod modules. Since so many developers' eyes will find their way to your README before anything else, quality here is your public-facing measure of your work.
+    cd LinqInManhattan
+    dotnet build
+    dotnet run
 
-<br /> <br /> Refer to the sample-README in the class repo for an example. 
-- [Reference](https://github.com/noffle/art-of-readme)
+Additionally, users can build and run LinqInManhattan using Visual
+Studio 2017 or greater by opening the solution file at the root of this
+repository. No unit tests were included with this solution.
 
-## Rubric
-- 7pts: Program meets all requirements described in Lab directions
+## Example
 
-	Points  | Reasoning | 
-	 ------------ | :-----------: | 
-	7       | Program runs as expected, no exceptions during execution |
-	5       | Program runs/compiles, Program contains logic/process errors|
-	4       | Program runs/compiles, but throws exceptions during execution |
-	2       | Missing tests // tests are not passing // not enough valid tests |
-	2       | Missing Readme Document // Readme Document does not meet standards |
-	0       | Program does not compile/run. Build Errors. |
-	0       | No Submission |
+#### Unfiltered Neighborhood Query ####
+![Unfiltered Query Screenshot](/assets/allScreenshot.JPG)
+#### Neighborhood Query Without Empty Results ####
+![Non-Empty Query Screenshot](/assets/nonemptyScreenshot.JPG)
+#### Neighborhood Query With Only Unique, Non-Empty Results ####
+![Unique Non-Empty Query Screenshot](/assets/uniqueNonemptyScreenshot.JPG)
 
-- 3pts: Code meets industry standards
-	- These points are only awardable if you score at minimum a 5/7 on above criteria
+## Architecture
 
-	Points  | Reasoning | 
-	 ------------ | :-----------: | 
-	3       | Code meets Industry Standards // methods and variables namings are appropriate // Selective and iterative statements are used appropriately, Fundamentals are propertly executed // Clearly and cleanly commented |
-	2       | syntax for naming conventions are not correct (camelCasing and PascalCasing are used appropriately) // slight errors in use of fundamentals // Missing some comments |
-	1       | Inappropriate naming conventions, and/or inappropriate use of fundamentals // Code is not commented  |
-	0       | No Submission or incomplete submission |
+LinqInManhattan makes LINQ queries against generic collections which are
+deserialized from geolocation data taken from a provided JSON file, data.json.
+Each JavaScript object type in the JSON was translated into C# classes
+manually, and then the Newtonsoft.Json NuGet package was used to perform
+the deserialization into C# objects of these classes.
 
+### Geometry
 
+_Geometry_ contains a string property called type corresponding to the "type"
+field within JSON geometry objects. The payload, "coordinates", is stored in
+a double array property called "Coordinates".
+
+### Properties
+
+The _Properties_ class contains the addressing data for each feature within
+the JSON data set as C# string properties. *Properties.Neighborhood* is used
+by the LINQ queries to select a list of all of the neighborhoods represented
+by the features included in the dataset.
+
+### Feature
+
+The _Feature_ class is used to deserialize feature objects from the JSON
+dataset. The type field is included as a string property in addition to
+_Geometry_ and _Properties_ properties.
+
+### FeatureCollection
+
+_FeatureCollection_ is a C# class corresponding to the "FeatureCollection"
+JSON root object. _FeatureCollection_ implements the _IList\<Feature\>_
+interface and supports LINQ queries against it. This implementation is provided
+through the "Features" property of type _List\<Feature\>_
+
+#### Queries ####
+
+Some queries have been added to the _FeatureCollection_ class as pre-made LINQ
+queries for _FeatureCollection_ objects to execute. These include an unfiltered neighborhood query which returns all _Feature.Neighborhood_ properties from
+the _FeatureCollection.Features_ list regardless of whether they are empty
+or duplicate entries. In addition, a query which removes empty strings as well
+as one that eliminates duplicates are provided. Finally, the
+_FeatureCollection.GetAllUniqueNonEmptyNeighborhoodsConsolidated()_ performs
+the non-empty, unique neighborhood query as a single LINQ query rather than
+a cumulative series of subqueries.
+
+### Data Model
+
+The source data for this program is stored in an external data.json file which
+consists of the aforementioned JavaScript objects grouped by _Feature_ objects
+as an array within the root _FeatureCollection_ object. This JSON file is
+deserialized using Newtonsoft.Json into native C# class objects from the
+JSON root up through its descendent objects, stored as key/value pairs in
+JSON. The deserialized objects are stored on the heap and are queried against
+without any changes being made or any serialization being performed back
+to data.json or any other persistent data store.
+
+### Command Line Interface (CLI)
+
+LinqInManhattan uses a command line interface through the user's console
+environment. Each query result is displayed to the users across two columns,
+and the results are paginated for ease of reading. Between each page is a
+prompt for the user to press a key to continue to either the next page of
+results or to the first page of the next query. A short description of each
+query is provided at the top of the first page of results.
+
+## Change Log
+
+* 3.29.2018 [Joshua Taylor](mailto:taylor.joshua88@gmail.com) - Initial
+release. All tests are passing.
